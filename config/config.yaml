@@ -3,7 +3,7 @@ trace:
 http: 
   port: 8765
   host: 127.0.0.1
-  maxrequestbodysize: 20<<20
+  maxrequestbodysize: 1024*1024*100
 filedriver:
   type: minio
   storepath: 'fileupload'
