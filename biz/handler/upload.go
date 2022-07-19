@@ -31,6 +31,34 @@ func Upload(ctx context.Context, c *app.RequestContext) {
 	//get file ext without using utils
 	ext := file.Filename[strings.LastIndex(file.Filename, "."):]
 
+	//spit allowfile with ","
+	allowfile := global.S_CONFIG.GetString("filedriver.allowfile")
+	allowfilelist := strings.Split(allowfile, ",")
+	//check ext without using utils
+	for _, v := range allowfilelist {
+		if v == ext {
+			break
+		}
+		if v == "" {
+			c.JSON(400, uploadresponse.ErrorResponse{
+				Code:    400,
+				Message: "file ext is not allow",
+				Reason:  "file ext is not allow",
+			})
+			return
+		}
+	}
+	//check file size
+	maxsize := global.S_CONFIG.GetInt64("filedriver.maxsize")
+	if file.Size > maxsize {
+		c.JSON(400, uploadresponse.ErrorResponse{
+			Code:    400,
+			Message: "file size is too large",
+			Reason:  "file size is too large",
+		})
+		return
+	}
+
 	newfilename := filename + ext
 	// get now time  YYYY/MM/DD string
 	now := time.Now()
