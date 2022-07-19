@@ -16,3 +16,9 @@ nacos配置
 ```
 go run . -ctype nacos -chost 127.0.0.1:8848
 ```
+
+### 接口
+
+http://127.0.0.1:8765/upload
+
+参数 file

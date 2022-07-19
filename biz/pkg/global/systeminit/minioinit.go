@@ -2,10 +2,8 @@ package systeminit
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"log"
-	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -72,11 +70,12 @@ func (c *MinioClient) UpLoadFile(ctx context.Context, objectName, contentType st
 		log.Println("upload file error:", err)
 		return "", err
 	}
-	urls, err := c.Client.PresignedPutObject(ctx, c.BucketName, objectName, time.Second*24*60*60*7)
-	if err != nil {
-		log.Println("upload file error:", err)
-		return "", err
-	}
-	fmt.Println("upload file success:", urls)
-	return urls.String(), nil
+	// urls, err := c.Client.PresignedPutObject(ctx, c.BucketName, objectName, time.Second*24*60*60*7)
+	// if err != nil {
+	// 	log.Println("upload file error:", err)
+	// 	return "", err
+	// }
+	// fmt.Println("upload file success:", urls)
+	fullurl := c.ExposeUrl + "/" + objectName
+	return fullurl, nil
 }

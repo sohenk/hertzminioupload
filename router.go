@@ -15,6 +15,5 @@ func customizedRegister(r *server.Hertz) {
 	// your code ...
 
 	r.POST("/upload", handler.Upload)
-	r.GET("/upload", handler.Upload)
 
 }
