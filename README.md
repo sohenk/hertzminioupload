@@ -22,3 +22,5 @@ go run . -ctype nacos -chost 127.0.0.1:8848
 http://127.0.0.1:8765/upload
 
 参数 file
+
+想要获取永久链接需要先配置bucket的访问权限
