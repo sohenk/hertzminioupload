@@ -1,0 +1,18 @@
+trace:
+  endpoint: http://192.168.130.32:14268/api/traces
+http: 
+  port: 8765
+  host: 127.0.0.1
+  maxrequestbodysize: 20<<20
+filedriver:
+  type: minio
+  storepath: 'fileupload'
+  allowfile: '.img,.jpeg,.png'
+minio:
+  endpoint: "172.19.90.123:80"
+  accessKeyID: "hdres"
+  secretAccessKey: "xojsdasdk!@#fsa"
+  useSSL: false
+  bucket: "hdres"
+  exposeurl: "172.19.90.123:8080"
+  
