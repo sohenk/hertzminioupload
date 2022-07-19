@@ -9,10 +9,10 @@ filedriver:
   storepath: 'fileupload'
   allowfile: '.img,.jpeg,.png'
 minio:
-  endpoint: "172.19.90.123:80"
+  endpoint: "192.168.130.43:9000"
   accessKeyID: "hdres"
-  secretAccessKey: "xojsdasdk!@#fsa"
+  secretAccessKey: "12345678"
   useSSL: false
   bucket: "hdres"
-  exposeurl: "172.19.90.123:8080"
+  exposeurl: "http://192.168.130.43:9001"
   

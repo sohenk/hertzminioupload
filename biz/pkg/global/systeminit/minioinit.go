@@ -2,8 +2,10 @@ package systeminit
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log"
+	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -61,7 +63,6 @@ func MinioClientInit(config *viper.Viper) (*MinioClient, error) {
 	}, nil
 }
 
-//UpLoadFile 将整个目录都上传,遍历所有文件夹及子文件夹上传
 func (c *MinioClient) UpLoadFile(ctx context.Context, objectName, contentType string, file io.Reader) (string, error) {
 	objectName = c.TargetFilePath + "/" + objectName
 
@@ -71,5 +72,11 @@ func (c *MinioClient) UpLoadFile(ctx context.Context, objectName, contentType st
 		log.Println("upload file error:", err)
 		return "", err
 	}
-	return c.ExposeUrl + "/" + objectName, nil
+	urls, err := c.Client.PresignedPutObject(ctx, c.BucketName, objectName, time.Second*24*60*60*7)
+	if err != nil {
+		log.Println("upload file error:", err)
+		return "", err
+	}
+	fmt.Println("upload file success:", urls)
+	return urls.String(), nil
 }
