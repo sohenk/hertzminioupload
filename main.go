@@ -8,14 +8,22 @@ import (
 	"hzminioupload/biz/pkg/global"
 	"hzminioupload/biz/pkg/global/systeminit"
 	"hzminioupload/bootstrap"
+	"io"
 	"log"
 	"strconv"
 	"strings"
 
+	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/hertz-contrib/tracer/hertz"
+	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go"
 	remote "github.com/yoyofxteam/nacos-viper-remote"
 
 	"github.com/spf13/viper"
+	jaegercfg "github.com/uber/jaeger-client-go/config"
+
+	hertztracer "github.com/hertz-contrib/tracer/hertz"
 )
 
 var (
@@ -79,10 +87,41 @@ func InitConfig(configtype, configHost string) *viper.Viper {
 	panic("config type error")
 }
 
+// export JAEGER_DISABLED=false
+// export JAEGER_SAMPLER_TYPE="const"
+// export JAEGER_SAMPLER_PARAM=1
+// export JAEGER_REPORTER_LOG_SPANS=true
+// export JAEGER_AGENT_HOST="127.0.0.1"
+// export JAEGER_AGENT_PORT=6831
+func InitTracer(serviceName string) (opentracing.Tracer, io.Closer) {
+	cfg := jaegercfg.Configuration{
+		Sampler: &jaegercfg.SamplerConfig{
+			Type:  "const",
+			Param: 1,
+		},
+		Reporter: &jaegercfg.ReporterConfig{
+			LogSpans:           true,
+			LocalAgentHostPort: fmt.Sprintf("%s:%d", global.S_CONFIG.GetString("trace.jaeger.agent..host"), global.S_CONFIG.GetInt("jaeger.agent.port")),
+			CollectorEndpoint:  global.S_CONFIG.GetString("trace.jaeger.endpoint"),
+		},
+		ServiceName: serviceName,
+	}
+	fmt.Println(cfg)
+	tracer, closer, err := cfg.NewTracer(jaegercfg.Logger(jaeger.StdLogger))
+	if err != nil {
+		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
+	}
+	// opentracing.InitGlobalTracer(tracer)
+	return tracer, closer
+}
+
 func main() {
 	flag.Parse()
 	//read config from nacos
 	global.S_CONFIG = InitConfig(Flags.ConfigType, Flags.ConfigHost)
+
+	ht, hc := InitTracer(Service.Name)
+	defer hc.Close()
 	mic, err := systeminit.MinioClientInit(global.S_CONFIG)
 	if err != nil {
 		log.Fatal("minio client init failed: %v", err)
@@ -94,8 +133,11 @@ func main() {
 
 	h := server.Default(
 		server.WithHostPorts(hostport),
+		server.WithTracer(hertz.NewTracer(ht, func(c *app.RequestContext) string {
+			return Service.Name + "::" + c.FullPath()
+		})),
 	)
-
+	h.Use(hertztracer.ServerCtx())
 	register(h)
 	h.Spin()
 }
