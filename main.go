@@ -13,6 +13,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hertz-contrib/cors"
+
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/hertz-contrib/tracer/hertz"
@@ -87,12 +89,6 @@ func InitConfig(configtype, configHost string) *viper.Viper {
 	panic("config type error")
 }
 
-// export JAEGER_DISABLED=false
-// export JAEGER_SAMPLER_TYPE="const"
-// export JAEGER_SAMPLER_PARAM=1
-// export JAEGER_REPORTER_LOG_SPANS=true
-// export JAEGER_AGENT_HOST="127.0.0.1"
-// export JAEGER_AGENT_PORT=6831
 func InitTracer(serviceName string) (opentracing.Tracer, io.Closer) {
 	cfg := jaegercfg.Configuration{
 		Sampler: &jaegercfg.SamplerConfig{
@@ -106,7 +102,6 @@ func InitTracer(serviceName string) (opentracing.Tracer, io.Closer) {
 		},
 		ServiceName: serviceName,
 	}
-	fmt.Println(cfg)
 	tracer, closer, err := cfg.NewTracer(jaegercfg.Logger(jaeger.StdLogger))
 	if err != nil {
 		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
@@ -137,6 +132,13 @@ func main() {
 			return Service.Name + "::" + c.FullPath()
 		})),
 	)
+
+	h.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"*"},
+		AllowHeaders:     []string{"*"},
+		AllowCredentials: true,
+	}))
 	h.Use(hertztracer.ServerCtx())
 	register(h)
 	h.Spin()

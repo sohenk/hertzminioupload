@@ -12,12 +12,12 @@ trace:
       port: 6831
 http: 
   port: 8765
-  host: 127.0.0.1
+  host: 0.0.0.0
   maxrequestbodysize: 1024*1024*100
 filedriver:
   type: minio
   storepath: 'fileupload'
-  allowfile: '.img,.jpeg,.png'
+  allowfile: '.gif,.jpeg,.png,.jpg'
 minio:
   endpoint: "172.19.90.123:80"
   accessKeyID: "hdres"
