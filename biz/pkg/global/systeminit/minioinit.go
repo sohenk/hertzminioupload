@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -64,7 +65,7 @@ func MinioClientInit(config *viper.Viper) (*MinioClient, error) {
 func (c *MinioClient) UpLoadFile(ctx context.Context, objectName, contentType string, file io.Reader) (string, error) {
 	objectName = c.TargetFilePath + "/" + objectName
 
-	log.Println("upload file:", objectName)
+	// log.Println("upload file:", objectName)
 	_, err := c.Client.PutObject(ctx, c.BucketName, objectName, file, -1, minio.PutObjectOptions{ContentType: contentType})
 	if err != nil {
 		log.Println("upload file error:", err)
@@ -73,4 +74,19 @@ func (c *MinioClient) UpLoadFile(ctx context.Context, objectName, contentType st
 	// 想要获取永久链接需要先配置bucket的访问权限
 	fullurl := c.ExposeUrl + "/" + c.BucketName + "/" + objectName
 	return fullurl, nil
+}
+
+func (c *MinioClient) GetUpLoadFileUrl(ctx context.Context, objectName string, expires time.Duration) (uploadFileurl, showurl string, err error) {
+	// fmt.Print(c.BucketName, objectName)
+
+	uploadUrl, err := c.Client.PresignedPutObject(ctx, c.BucketName, objectName, expires)
+	if err != nil {
+		log.Println("upload file error:", err)
+		return "", "", err
+	}
+	// 想要获取永久链接需要先配置bucket的访问权限
+	// fmt.Print(c.BucketName, objectName, uploadUrl.String())
+	uploadFileurl = uploadUrl.String()
+	showurl = c.ExposeUrl + "/" + c.BucketName + "/" + objectName
+	return uploadFileurl, showurl, nil
 }

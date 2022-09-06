@@ -11,7 +11,7 @@ trace:
       host: 192.168.130.32
       port: 6831
 http: 
-  port: 8765
+  port: 8766
   host: 0.0.0.0
   maxrequestbodysize: 1024*1024*100
 filedriver:

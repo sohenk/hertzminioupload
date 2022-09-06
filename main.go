@@ -8,22 +8,14 @@ import (
 	"hzminioupload/biz/pkg/global"
 	"hzminioupload/biz/pkg/global/systeminit"
 	"hzminioupload/bootstrap"
-	"io"
-	"log"
-	"strconv"
-	"strings"
 
 	"github.com/hertz-contrib/cors"
 
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
+	"github.com/cloudwego/hertz/pkg/app/server/registry"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 	"github.com/hertz-contrib/tracer/hertz"
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go"
-	remote "github.com/yoyofxteam/nacos-viper-remote"
-
-	"github.com/spf13/viper"
-	jaegercfg "github.com/uber/jaeger-client-go/config"
 
 	hertztracer "github.com/hertz-contrib/tracer/hertz"
 )
@@ -41,96 +33,42 @@ var (
 func init() {
 	Flags.Init()
 }
-func InitConfig(configtype, configHost string) *viper.Viper {
-	runtime_viper := viper.New()
-
-	runtime_viper.SetConfigType("yaml")
-	switch configtype {
-	case "local":
-		runtime_viper.SetConfigName(configHost)
-		runtime_viper.AddConfigPath(".")
-		err := runtime_viper.ReadInConfig()
-		if err != nil {
-			log.Fatal("read config failed: %v", err)
-			panic(err)
-		}
-		return runtime_viper
-	case "nacos":
-		h := strings.Split(configHost, ":")
-		addr := h[0]
-		port := 8848
-		if len(h) > 1 {
-			uport, _ := strconv.Atoi(h[1])
-			port = uport
-		}
-		fmt.Println("addr:", addr, "port:", port, "configtype:", configtype, "configHost:", configHost)
-		remote.SetOptions(&remote.Option{
-			Url:         addr,                                // nacos server 多地址需要地址用;号隔开，如 Url: "loc1;loc2;loc3"
-			Port:        uint64(port),                        // nacos server端口号
-			NamespaceId: "public",                            // nacos namespace
-			GroupName:   "DEFAULT_GROUP",                     // nacos group
-			Config:      remote.Config{DataId: Service.Name}, // nacos DataID
-			Auth:        nil,                                 // 如果需要验证登录,需要此参数
-		})
-		err := runtime_viper.AddRemoteProvider("nacos", configHost, Service.Name)
-		if err != nil {
-			log.Fatal("read config failed: %v", err)
-			panic(err)
-		}
-		err = runtime_viper.ReadRemoteConfig()
-		if err != nil {
-			log.Fatal("read config failed: %v", err)
-			panic(err)
-		}
-		return runtime_viper
-	default:
-		panic("config type error")
-	}
-	panic("config type error")
-}
-
-func InitTracer(serviceName string) (opentracing.Tracer, io.Closer) {
-	cfg := jaegercfg.Configuration{
-		Sampler: &jaegercfg.SamplerConfig{
-			Type:  "const",
-			Param: 1,
-		},
-		Reporter: &jaegercfg.ReporterConfig{
-			LogSpans:           true,
-			LocalAgentHostPort: fmt.Sprintf("%s:%d", global.S_CONFIG.GetString("trace.jaeger.agent..host"), global.S_CONFIG.GetInt("jaeger.agent.port")),
-			CollectorEndpoint:  global.S_CONFIG.GetString("trace.jaeger.endpoint"),
-		},
-		ServiceName: serviceName,
-	}
-	tracer, closer, err := cfg.NewTracer(jaegercfg.Logger(jaeger.StdLogger))
-	if err != nil {
-		panic(fmt.Sprintf("ERROR: cannot init Jaeger: %v\n", err))
-	}
-	// opentracing.InitGlobalTracer(tracer)
-	return tracer, closer
-}
 
 func main() {
 	flag.Parse()
 	//read config from nacos
-	global.S_CONFIG = InitConfig(Flags.ConfigType, Flags.ConfigHost)
+	myconfig, err := bootstrap.InitConfig(Service.Name, Flags.ConfigType, Flags.ConfigHost)
+	if err != nil {
+		panic(err)
+	}
+	global.S_CONFIG = myconfig
 
-	ht, hc := InitTracer(Service.Name)
+	ht, hc := bootstrap.InitTracer(Service.Name)
 	defer hc.Close()
 	mic, err := systeminit.MinioClientInit(global.S_CONFIG)
 	if err != nil {
-		log.Fatal("minio client init failed: %v", err)
-		panic(err)
+		panic(fmt.Sprintf("minio client init failed: %v", err))
 	}
 	global.S_MinioClient = mic
 
 	hostport := global.S_CONFIG.GetString("http.host") + ":" + global.S_CONFIG.GetString("http.port")
-
+	rg, err := bootstrap.InitNacosRegistry(global.S_CONFIG.GetString("registry.nacos.ip"), Service.Name)
+	if err != nil {
+		panic(err)
+	}
 	h := server.Default(
 		server.WithHostPorts(hostport),
 		server.WithTracer(hertz.NewTracer(ht, func(c *app.RequestContext) string {
 			return Service.Name + "::" + c.FullPath()
 		})),
+		server.WithRegistry(rg,
+			&registry.Info{
+				ServiceName: Service.Name,
+				Addr:        utils.NewNetAddr("tcp", global.S_CONFIG.GetString("registry.nacos.ip")+":"+global.S_CONFIG.GetString("registry.nacos.port")),
+				Weight:      10,
+				Tags:        nil,
+			},
+		),
 	)
 
 	h.Use(cors.New(cors.Config{

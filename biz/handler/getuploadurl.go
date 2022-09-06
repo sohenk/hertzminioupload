@@ -13,36 +13,28 @@ import (
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app"
+	"github.com/cloudwego/hertz/pkg/common/utils"
 )
 
 // upload to minio .
-func Upload(ctx context.Context, c *app.RequestContext) {
-	file, err := c.FormFile("file")
-	if err != nil {
+func GetUploadUrl(ctx context.Context, c *app.RequestContext) {
+	ofilename := c.PostForm("filename")
+	if ofilename == "" {
 		c.JSON(400, uploadresponse.ErrorResponse{
 			Code:    400,
-			Message: "file error ",
-			Reason:  err.Error(),
+			Message: "filename is empty",
+			Reason:  "filename is empty",
 		})
 		return
 	}
-	if file == nil {
-		c.JSON(400, uploadresponse.ErrorResponse{
-			Code:    400,
-			Message: "file is empty",
-			Reason:  "file is empty",
-		})
-		return
-	}
-	dm5filename := md5.Sum([]byte(file.Filename)) //转成加密编码
+	dm5filename := md5.Sum([]byte(ofilename)) //转成加密编码
 	filename := fmt.Sprintf("%x", dm5filename)
 	//get file ext without using utils
-	ext := file.Filename[strings.LastIndex(file.Filename, "."):]
+	ext := ofilename[strings.LastIndex(ofilename, "."):]
 
 	//spit allowfile with ","
 	allowfile := global.S_CONFIG.GetString("filedriver.allowfile")
-	//check ext without using utils
-	err = filenamevailid.Filenamevailid(file.Filename, allowfile)
+	err := filenamevailid.Filenamevailid(ofilename, allowfile)
 	if err != nil {
 		c.JSON(400, uploadresponse.ErrorResponse{
 			Code:    400,
@@ -59,19 +51,9 @@ func Upload(ctx context.Context, c *app.RequestContext) {
 
 	savepath := nowstr + "/" + newfilename
 
-	//get upload file temp path
-	tempfile, err := file.Open()
-	if err != nil {
-		c.JSON(400, uploadresponse.ErrorResponse{
-			Code:    400,
-			Message: "open file error",
-			Reason:  err.Error(),
-		})
-		return
-	}
-	defer tempfile.Close()
+	expiry := time.Second * 5 * 60 // 1 day.
+	uploadfileurl, showurl, err := global.S_MinioClient.GetUpLoadFileUrl(ctx, savepath, expiry)
 
-	fileurl, err := global.S_MinioClient.UpLoadFile(ctx, savepath, file.Header.Get("content-type"), tempfile)
 	if err != nil {
 		c.JSON(400, uploadresponse.ErrorResponse{
 			Code:    400,
@@ -85,12 +67,18 @@ func Upload(ctx context.Context, c *app.RequestContext) {
 		Code:    200,
 		Message: "success",
 		Reason:  "success",
-		Data: uploadresponse.File{
-			FileName: file.Filename,
-			FileSize: file.Size,
-			FileType: file.Header.Get("Content-Type"),
-			FileUrl:  fileurl,
+		Data: uploadresponse.UploadFileUrl{
+			UploadUrl: uploadfileurl,
+			Expires:   time.Now().Add(expiry),
+			FileUrl:   showurl,
 		},
 	})
+	return
+}
 
+// checkfile md5
+func Checkfile(ctx context.Context, c *app.RequestContext) {
+	c.JSON(200, utils.H{
+		"message": global.S_CONFIG.GetString("filedriver.storepath"),
+	})
 }
