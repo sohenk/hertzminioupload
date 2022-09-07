@@ -8,6 +8,7 @@ type UploadResponse struct {
 	Reason  string      `json:"reason"`
 	Data    interface{} `json:"data"`
 }
+
 type File struct {
 	FileName string
 	FileSize int64

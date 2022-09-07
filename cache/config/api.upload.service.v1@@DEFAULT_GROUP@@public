@@ -31,12 +31,12 @@ filedriver:
 
 minio:
   #endpoint: "192.168.130.4:80"
-  endpoint: "192.168.130.30:9900"
+  endpoint: "172.19.90.123"
   accessKeyID: "hdres"
   secretAccessKey: "xojsdasdk!@#fsa"
   useSSL: false
   bucket: "hdres"
-  exposeurl: "http://192.168.130.30:9900"
+  exposeurl: "http://172.19.90.123"
   
  
   

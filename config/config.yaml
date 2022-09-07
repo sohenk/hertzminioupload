@@ -10,18 +10,30 @@ trace:
     agent:
       host: 192.168.130.32
       port: 6831
+registry:
+  nacos:
+    ip: "192.168.130.32"
+    port: 8848
+    logdir:  "./tmp/nacos/log"
+    cachedir: "./tmp/nacos/cache"
+    loglevel:  "debug"
+    namespaceid: "public"
+    timeoutms: 5000
+    notloadcacheatstart: true
 http: 
-  port: 8766
+  port: 8765
   host: 0.0.0.0
   maxrequestbodysize: 1024*1024*100
 filedriver:
   type: minio
   storepath: 'fileupload'
   allowfile: '.gif,.jpeg,.png,.jpg'
+
 minio:
-  endpoint: "172.19.90.123:80"
-  accessKeyID: "hdres"
-  secretAccessKey: "xojsdasdk!@#fsa"
+  #endpoint: "192.168.130.4:80"
+  endpoint: "172.19.90.123"
+  accessKeyID: ""
+  secretAccessKey: ""
   useSSL: false
   bucket: "hdres"
   exposeurl: "http://172.19.90.123"
