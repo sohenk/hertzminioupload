@@ -11,18 +11,12 @@ import (
 
 	"github.com/hertz-contrib/cors"
 
-	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/app/server"
-	"github.com/cloudwego/hertz/pkg/app/server/registry"
-	"github.com/cloudwego/hertz/pkg/common/utils"
-	"github.com/hertz-contrib/tracer/hertz"
-
-	hertztracer "github.com/hertz-contrib/tracer/hertz"
 )
 
 var (
 	Service = bootstrap.NewServiceInfo(
-		"api.upload.service.v1",
+		"allmedia.uploadservice.v1",
 		"1.0.0",
 		"",
 	)
@@ -36,15 +30,16 @@ func init() {
 
 func main() {
 	flag.Parse()
+	Service.Name = Flags.ServiceName
 	//read config from nacos
-	myconfig, err := bootstrap.InitConfig(Service.Name, Flags.ConfigType, Flags.ConfigHost)
+	myconfig, err := bootstrap.InitConfig(Service.Name, Flags.ConfigType, Flags.ConfigHost, Flags.NacosUserName, Flags.NacosPassword)
 	if err != nil {
 		panic(err)
 	}
 	global.S_CONFIG = myconfig
 
-	ht, hc := bootstrap.InitTracer(Service.Name)
-	defer hc.Close()
+	// ht, hc := bootstrap.InitTracer(Service.Name)
+	// defer hc.Close()
 	mic, err := systeminit.MinioClientInit(global.S_CONFIG)
 	if err != nil {
 		panic(fmt.Sprintf("minio client init failed: %v", err))
@@ -52,23 +47,23 @@ func main() {
 	global.S_MinioClient = mic
 
 	hostport := global.S_CONFIG.GetString("http.host") + ":" + global.S_CONFIG.GetString("http.port")
-	rg, err := bootstrap.InitNacosRegistry(global.S_CONFIG.GetString("registry.nacos.ip"), Service.Name)
+	// rg, err := bootstrap.InitNacosRegistry(global.S_CONFIG.GetString("registry.nacos.ip"), Service.Name)
 	if err != nil {
 		panic(err)
 	}
 	h := server.Default(
 		server.WithHostPorts(hostport),
-		server.WithTracer(hertz.NewTracer(ht, func(c *app.RequestContext) string {
-			return Service.Name + "::" + c.FullPath()
-		})),
-		server.WithRegistry(rg,
-			&registry.Info{
-				ServiceName: Service.Name,
-				Addr:        utils.NewNetAddr("tcp", global.S_CONFIG.GetString("registry.nacos.ip")+":"+global.S_CONFIG.GetString("registry.nacos.port")),
-				Weight:      10,
-				Tags:        nil,
-			},
-		),
+		// server.WithTracer(hertz.NewTracer(ht, func(c *app.RequestContext) string {
+		// 	return Service.Name + "::" + c.FullPath()
+		// })),
+		// server.WithRegistry(rg,
+		// 	&registry.Info{
+		// 		ServiceName: Service.Name,
+		// 		Addr:        utils.NewNetAddr("tcp", global.S_CONFIG.GetString("registry.nacos.ip")+":"+global.S_CONFIG.GetString("registry.nacos.port")),
+		// 		Weight:      10,
+		// 		Tags:        nil,
+		// 	},
+		// ),
 	)
 
 	h.Use(cors.New(cors.Config{
@@ -77,7 +72,7 @@ func main() {
 		AllowHeaders:     []string{"*"},
 		AllowCredentials: true,
 	}))
-	h.Use(hertztracer.ServerCtx())
+	// h.Use(hertztracer.ServerCtx())
 	register(h)
 	h.Spin()
 }

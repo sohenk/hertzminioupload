@@ -3,6 +3,7 @@
 *.so
 _obj
 _test
+hzminioupload
 *.[568vq]
 [568vq].out
 *.cgo1.go
@@ -30,6 +31,7 @@ _testmain.go
 !.gitkeep
 .DS_Store
 /.idea
+/cache
 /.vscode
 /output
 *.local.yml

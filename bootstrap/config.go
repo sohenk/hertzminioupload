@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-func InitConfig(serviceName, configtype, configHost string) (*viper.Viper, error) {
+func InitConfig(serviceName, configtype, configHost, username, password string) (*viper.Viper, error) {
 	runtime_viper := viper.New()
 	runtime_viper.SetConfigType("yaml")
 	switch configtype {
@@ -24,6 +24,11 @@ func InitConfig(serviceName, configtype, configHost string) (*viper.Viper, error
 		return runtime_viper, nil
 	case "nacos":
 		h := strings.Split(configHost, ":")
+
+		if username != "" {
+			username = "nacos"
+		}
+
 		addr := h[0]
 		port := 8848
 		if len(h) > 1 {
@@ -37,7 +42,12 @@ func InitConfig(serviceName, configtype, configHost string) (*viper.Viper, error
 			NamespaceId: "public",                           // nacos namespace
 			GroupName:   "DEFAULT_GROUP",                    // nacos group
 			Config:      remote.Config{DataId: serviceName}, // nacos DataID
-			Auth:        nil,                                // 如果需要验证登录,需要此参数
+			Auth: &remote.Auth{
+				Enable:   true,
+				User:     username,
+				Password: password,
+			}, // 如果需要验证登录,需要此参数
+
 		})
 		err := runtime_viper.AddRemoteProvider("nacos", configHost, serviceName)
 		if err != nil {

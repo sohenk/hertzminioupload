@@ -13,6 +13,7 @@ require (
 	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1761 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
+	github.com/chenzhuoyu/iasm v0.9.0 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
@@ -47,7 +48,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
 	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
 	golang.org/x/sync v0.0.0-20220819030929-7fc1605a5dde // indirect
-	golang.org/x/sys v0.0.0-20220829200755-d48e67d00261 // indirect
+	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
@@ -59,15 +60,15 @@ require (
 require (
 	github.com/bytedance/go-tagexpr/v2 v2.9.2 // indirect
 	github.com/bytedance/gopkg v0.0.0-20220531084716-665b4f21126f // indirect
-	github.com/bytedance/sonic v1.3.0 // indirect
-	github.com/chenzhuoyu/base64x v0.0.0-20211019084208-fb5309c8db06 // indirect
+	github.com/bytedance/sonic v1.10.2 // indirect
+	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
 	github.com/cloudwego/netpoll v0.2.4 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/henrylee2cn/ameda v1.4.10 // indirect
 	github.com/henrylee2cn/goutil v0.0.0-20210127050712-89660552f6f8 // indirect
 	github.com/hertz-contrib/cors v0.0.0-20220601061225-50f4e582beaf
 	github.com/hertz-contrib/tracer v0.0.0-20220601062646-788b1565bdab
-	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/nyaruka/phonenumbers v1.0.55 // indirect
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/sohenk/nacos-viper-remote v0.0.0-20220906065002-c82b9c8fe393
@@ -77,6 +78,6 @@ require (
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
-	golang.org/x/arch v0.0.0-20210923205945-b76863e36670 // indirect
+	golang.org/x/arch v0.5.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 )
