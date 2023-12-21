@@ -14,7 +14,7 @@ go run . -ctype local -chost ./config/config
 nacos配置
 
 ```
-go run . -ctype nacos -chost 127.0.0.1:8848
+go run . -ctype nacos -chost 172.19.70.251:8848 -nacosusername nacos -nacospassword 'fW2&@hjDK9bK' -sname allmedia.uploadservice.v2
 ```
 
 ### 接口
